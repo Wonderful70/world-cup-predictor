@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>World Cup 2026 Match Predictor</title>
+<style>
+:root{
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f5f4f0;
+  --color-background-tertiary:#ececea;
+  --color-background-success:#eaf3de;
+  --color-background-info:#e6f1fb;
+  --color-background-danger:#fcebeb;
+  --color-text-primary:#1a1a1a;
+  --color-text-secondary:#6b6a64;
+  --color-text-tertiary:#9b9a93;
+  --color-text-success:#27500a;
+  --color-text-info:#0c447c;
+  --color-text-danger:#791f1f;
+  --color-border-tertiary:rgba(0,0,0,0.1);
+  --color-border-secondary:rgba(0,0,0,0.2);
+  --color-border-success:#97c459;
+  --color-border-info:#85b7eb;
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --color-background-primary:#1e1e1c;
+    --color-background-secondary:#2a2a27;
+    --color-background-tertiary:#161614;
+    --color-background-success:#173404;
+    --color-background-info:#042c53;
+    --color-background-danger:#501313;
+    --color-text-primary:#f1f0e8;
+    --color-text-secondary:#b4b2a9;
+    --color-text-tertiary:#888780;
+    --color-text-success:#c0dd97;
+    --color-text-info:#b5d4f4;
+    --color-text-danger:#f7c1c1;
+    --color-border-tertiary:rgba(255,255,255,0.12);
+    --color-border-secondary:rgba(255,255,255,0.2);
+    --color-border-success:#3b6d11;
+    --color-border-info:#185fa5;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--color-background-tertiary);color:var(--color-text-primary);padding:2rem 1rem}
+.page{max-width:680px;margin:0 auto}
+select,button,input[type=checkbox]{font-family:inherit;font-size:14px}
+select{width:100%;height:36px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+button{cursor:pointer;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+button:hover{background:var(--color-background-secondary)}
+button:active{transform:scale(0.98)}
+.header{margin-bottom:1.5rem}
+.header h1{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.header p{font-size:13px;color:var(--color-text-secondary);margin-top:4px}
+.team-row{display:grid;grid-template-columns:1fr 48px 1fr;gap:12px;align-items:end;margin-bottom:1rem}
+.team-col label{display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:6px}
+.vs{text-align:center;font-size:13px;color:var(--color-text-secondary);padding-bottom:8px}
+.neutral-row{display:flex;align-items:center;gap:8px;margin-bottom:1rem;font-size:13px;color:var(--color-text-secondary)}
+.predict-btn{width:100%;padding:10px;font-size:14px;font-weight:500}
+.results{margin-top:1.5rem;display:none}
+.match-title{font-size:16px;font-weight:500;color:var(--color-text-primary);margin-bottom:1rem;text-align:center}
+.models-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.model-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem}
+.model-card h3{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em}
+.prob-row{margin-bottom:8px}
+.prob-label{display:flex;justify-content:space-between;font-size:13px;color:var(--color-text-primary);margin-bottom:4px}
+.prob-pct{font-weight:500}
+.bar-bg{height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.6s ease}
+.bar-home{background:#378ADD}
+.bar-draw{background:#888780}
+.bar-away{background:#D4537E}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:0.75rem;text-align:center}
+.stat-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.stat-val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.section-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem;margin-bottom:12px}
+.section-card h3{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em}
+.score-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.score-label{font-size:13px;color:var(--color-text-primary);width:40px;text-align:center;font-weight:500}
+.score-bar-bg{flex:1;height:8px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;background:#7F77DD}
+.score-pct{font-size:12px;color:var(--color-text-secondary);width:40px;text-align:right}
+.error{color:var(--color-text-danger);font-size:13px;margin-top:0.5rem;display:none}
+.loading{text-align:center;color:var(--color-text-secondary);font-size:13px;padding:1rem;display:none}
+.form-strip-wrap{margin-bottom:1rem}
+.form-strip-label{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px}
+.form-strip{display:flex;gap:4px;margin-bottom:8px}
+.form-pill{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.pill-w{background:var(--color-background-success);color:var(--color-text-success)}
+.pill-d{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.pill-l{background:var(--color-background-danger);color:var(--color-text-danger)}
+.match-table{width:100%;font-size:12px;border-collapse:collapse}
+.match-table th{text-align:left;color:var(--color-text-secondary);font-weight:500;padding:4px 6px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.match-table td{padding:4px 6px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary)}
+.history-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.poly-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px}
+.poly-row:last-child{border-bottom:none}
+.poly-outcome{color:var(--color-text-primary)}
+.poly-pct{font-weight:500;color:var(--color-text-info)}
+.poly-empty{font-size:13px;color:var(--color-text-secondary);text-align:center;padding:0.5rem 0}
+.poly-link{font-size:12px;color:var(--color-text-info);margin-top:8px;display:inline-block}
+.bet-card{border-radius:var(--border-radius-lg);padding:1rem;margin-bottom:8px}
+.bet-card.safe{background:var(--color-background-success);border:0.5px solid var(--color-border-success)}
+.bet-card.edge{background:var(--color-background-info);border:0.5px solid var(--color-border-info)}
+.bet-card-title{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+.bet-card.safe .bet-card-title{color:var(--color-text-success)}
+.bet-card.edge .bet-card-title{color:var(--color-text-info)}
+.bet-card-main{font-size:16px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.bet-card-detail{font-size:13px;color:var(--color-text-secondary)}
+.add-match-toggle{font-size:13px;color:var(--color-text-info);cursor:pointer;display:inline-block;margin-bottom:1rem;background:none;border:none;padding:0;text-decoration:underline}
+.add-match-card{display:none;margin-bottom:1.5rem}
+.add-match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.add-match-field label{display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.add-match-field input,.add-match-field select{width:100%;height:34px;padding:6px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:13px}
+.add-match-submit{width:100%;padding:9px;font-size:13px;font-weight:500;margin-top:4px}
+.add-match-status{font-size:13px;margin-top:8px;display:none;padding:8px 10px;border-radius:var(--border-radius-md)}
+.add-match-status.working{background:var(--color-background-info);color:var(--color-text-info)}
+.add-match-status.success{background:var(--color-background-success);color:var(--color-text-success)}
+.add-match-status.fail{background:var(--color-background-danger);color:var(--color-text-danger)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>World Cup 2026 match predictor</h1>
+    <p>XGBoost + Poisson model trained on 49,000+ international matches</p>
+  </div>
+
+  <div class="team-row">
+    <div class="team-col">
+      <label>Home / team A</label>
+      <select id="home-select"><option value="">Loading teams...</option></select>
+    </div>
+    <div class="vs">vs</div>
+    <div class="team-col">
+      <label>Away / team B</label>
+      <select id="away-select"><option value="">Loading teams...</option></select>
+    </div>
+  </div>
+
+  <div class="neutral-row">
+    <input type="checkbox" id="neutral" checked>
+    <label for="neutral">Neutral venue (World Cup group stage)</label>
+  </div>
+
+  <button class="add-match-toggle" id="add-match-toggle" type="button">+ Add a finished match result</button>
+
+  <div class="section-card add-match-card" id="add-match-card">
+    <h3>Add finished match</h3>
+    <div class="add-match-grid">
+      <div class="add-match-field">
+        <label>Date</label>
+        <input type="date" id="am-date">
+      </div>
+      <div class="add-match-field">
+        <label>Tournament</label>
+        <input type="text" id="am-tournament" value="FIFA World Cup">
+      </div>
+      <div class="add-match-field">
+        <label>Home team</label>
+        <input type="text" id="am-home" placeholder="e.g. France">
+      </div>
+      <div class="add-match-field">
+        <label>Away team</label>
+        <input type="text" id="am-away" placeholder="e.g. Senegal">
+      </div>
+      <div class="add-match-field">
+        <label>Home score</label>
+        <input type="number" id="am-home-score" min="0" value="0">
+      </div>
+      <div class="add-match-field">
+        <label>Away score</label>
+        <input type="number" id="am-away-score" min="0" value="0">
+      </div>
+      <div class="add-match-field">
+        <label>City</label>
+        <input type="text" id="am-city" placeholder="optional">
+      </div>
+      <div class="add-match-field">
+        <label>Country</label>
+        <input type="text" id="am-country" placeholder="optional">
+      </div>
+    </div>
+    <div class="neutral-row">
+      <input type="checkbox" id="am-neutral" checked>
+      <label for="am-neutral">Neutral venue</label>
+    </div>
+    <button class="add-match-submit" id="add-match-submit" type="button">Add match & retrain model</button>
+    <div class="add-match-status" id="add-match-status"></div>
+  </div>
+
+  <button class="predict-btn" id="predict-btn">Predict match</button>
+  <div class="error" id="error-msg"></div>
+  <div class="loading" id="loading">Calculating...</div>
+
+  <div class="results" id="results">
+    <div class="match-title" id="match-title"></div>
+
+    <div class="models-grid">
+      <div class="model-card">
+        <h3>XGBoost model</h3>
+        <div class="prob-row">
+          <div class="prob-label"><span id="xgb-home-label">Home</span><span class="prob-pct" id="xgb-home-pct">-</span></div>
+          <div class="bar-bg"><div class="bar-fill bar-home" id="xgb-home-bar" style="width:0%"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-label"><span>Draw</span><span class="prob-pct" id="xgb-draw-pct">-</span></div>
+          <div class="bar-bg"><div class="bar-fill bar-draw" id="xgb-draw-bar" style="width:0%"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-label"><span id="xgb-away-label">Away</span><span class="prob-pct" id="xgb-away-pct">-</span></div>
+          <div class="bar-bg"><div class="bar-fill bar-away" id="xgb-away-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <h3>Poisson simulation</h3>
+        <div class="prob-row">
+          <div class="prob-label"><span id="poi-home-label">Home</span><span class="prob-pct" id="poi-home-pct">-</span></div>
+          <div class="bar-bg"><div class="bar-fill bar-home" id="poi-home-bar" style="width:0%"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-label"><span>Draw</span><span class="prob-pct" id="poi-draw-pct">-</span></div>
+          <div class="bar-bg"><div class="bar-fill bar-draw" id="poi-draw-bar" style="width:0%"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-label"><span id="poi-away-label">Away</span><span class="prob-pct" id="poi-away-pct">-</span></div>
+          <div class="bar-bg"><div class="bar-fill bar-away" id="poi-away-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label" id="stat-home-label">Home Elo</div>
+        <div class="stat-val" id="stat-home-elo">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Expected goals</div>
+        <div class="stat-val" id="stat-xg">- : -</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" id="stat-away-label">Away Elo</div>
+        <div class="stat-val" id="stat-away-elo">-</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3>Top scorelines (Poisson)</h3>
+      <div id="scorelines-list"></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Polymarket comparison</h3>
+      <div id="polymarket-content"><div class="poly-empty">Checking Polymarket...</div></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Best bet suggestions</h3>
+      <div id="bet-suggestions"></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Last 10 matches</h3>
+      <div class="history-grid">
+        <div>
+          <div class="form-strip-wrap">
+            <div class="form-strip-label" id="home-history-label">Home</div>
+            <div class="form-strip" id="home-form-strip"></div>
+          </div>
+          <table class="match-table">
+            <thead><tr><th>Opp</th><th>Score</th><th>R</th></tr></thead>
+            <tbody id="home-history-table"></tbody>
+          </table>
+        </div>
+        <div>
+          <div class="form-strip-wrap">
+            <div class="form-strip-label" id="away-history-label">Away</div>
+            <div class="form-strip" id="away-form-strip"></div>
+          </div>
+          <table class="match-table">
+            <thead><tr><th>Opp</th><th>Score</th><th>R</th></tr></thead>
+            <tbody id="away-history-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+
+async function loadTeams() {
+  try {
+    const r = await fetch(API + '/teams');
+    const data = await r.json();
+    const teams = data.teams;
+    ['home-select','away-select'].forEach((id) => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '<option value="">Select team...</option>';
+      teams.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        if (id === 'home-select' && t === 'Brazil') opt.selected = true;
+        if (id === 'away-select' && t === 'Germany') opt.selected = true;
+        sel.appendChild(opt);
+      });
+    });
+  } catch(e) {
+    document.getElementById('error-msg').textContent = 'Could not connect to API at localhost:8000. Make sure uvicorn is running.';
+    document.getElementById('error-msg').style.display = 'block';
+  }
+}
+
+function setBar(id, pct) {
+  document.getElementById(id).style.width = pct + '%';
+}
+
+function renderHistory(matches, stripId, tableId) {
+  const strip = document.getElementById(stripId);
+  const table = document.getElementById(tableId);
+  strip.innerHTML = '';
+  table.innerHTML = '';
+  matches.slice(0, 10).slice().reverse().forEach(m => {
+    const cls = m.result === 'W' ? 'pill-w' : m.result === 'D' ? 'pill-d' : 'pill-l';
+    strip.innerHTML += '<div class="form-pill ' + cls + '">' + m.result + '</div>';
+  });
+  matches.slice(0, 10).forEach(m => {
+    table.innerHTML += '<tr><td>' + m.opponent + '</td><td>' + m.score + '</td><td>' + m.result + '</td></tr>';
+  });
+}
+
+function renderPolymarket(poly) {
+  const el = document.getElementById('polymarket-content');
+  if (!poly.found) {
+    el.innerHTML = '<div class="poly-empty">' + (poly.message || 'No active Polymarket market found for this matchup.') + '</div>';
+    return;
+  }
+  let html = '';
+  poly.outcomes.forEach(o => {
+    html += '<div class="poly-row"><span class="poly-outcome">' + o.outcome + '</span><span class="poly-pct">' + o.implied_pct + '%</span></div>';
+  });
+  if (poly.url) html += '<a class="poly-link" href="' + poly.url + '" target="_blank">View on Polymarket -&gt;</a>';
+  el.innerHTML = html;
+}
+
+function renderBetSuggestions(xgb, poi, poly, home, away) {
+  const el = document.getElementById('bet-suggestions');
+  const outcomes = [
+    {label: home + ' win', xgb: xgb.home_win_pct, poi: poi.home_win_pct},
+    {label: 'Draw', xgb: xgb.draw_pct, poi: poi.draw_pct},
+    {label: away + ' win', xgb: xgb.away_win_pct, poi: poi.away_win_pct},
+  ];
+  outcomes.forEach(o => o.avg = Math.round((o.xgb + o.poi) / 2 * 10) / 10);
+
+  const safest = outcomes.reduce(function(a,b){ return b.avg > a.avg ? b : a; });
+
+  let html = '<div class="bet-card safe">' +
+    '<div class="bet-card-title">Safest favorite</div>' +
+    '<div class="bet-card-main">' + safest.label + '</div>' +
+    '<div class="bet-card-detail">Model average: ' + safest.avg + '% (XGBoost ' + safest.xgb + '%, Poisson ' + safest.poi + '%)</div>' +
+  '</div>';
+
+  if (poly.found && poly.outcomes && poly.outcomes.length) {
+    let bestEdge = null;
+    poly.outcomes.forEach(po => {
+      outcomes.forEach(mo => {
+        const nameMatch = po.outcome.toLowerCase().indexOf(mo.label.split(' ')[0].toLowerCase()) !== -1;
+        if (nameMatch) {
+          const edge = mo.avg - po.implied_pct;
+          if (!bestEdge || Math.abs(edge) > Math.abs(bestEdge.edge)) {
+            bestEdge = {label: mo.label, modelPct: mo.avg, marketPct: po.implied_pct, edge: edge};
+          }
+        }
+      });
+    });
+    if (bestEdge) {
+      const dir = bestEdge.edge > 0 ? 'higher than' : 'lower than';
+      html += '<div class="bet-card edge">' +
+        '<div class="bet-card-title">Biggest model vs market gap</div>' +
+        '<div class="bet-card-main">' + bestEdge.label + '</div>' +
+        '<div class="bet-card-detail">Model says ' + bestEdge.modelPct + '%, Polymarket implies ' + bestEdge.marketPct + '% &mdash; model is ' + Math.abs(Math.round(bestEdge.edge*10)/10) + ' pts ' + dir + ' the market</div>' +
+      '</div>';
+    }
+  } else {
+    html += '<div class="bet-card-detail" style="padding:4px 0 0 2px;">No Polymarket market available to compare edge against for this matchup.</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+document.getElementById('predict-btn').addEventListener('click', async () => {
+  const home = document.getElementById('home-select').value;
+  const away = document.getElementById('away-select').value;
+  const neutral = document.getElementById('neutral').checked;
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+
+  if (!home || !away) { errEl.textContent = 'Please select both teams.'; errEl.style.display = 'block'; return; }
+  if (home === away) { errEl.textContent = 'Please select two different teams.'; errEl.style.display = 'block'; return; }
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+
+  try {
+    const r = await fetch(API + '/predict', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({home_team: home, away_team: away, neutral: neutral})
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'API error'); }
+    const d = await r.json();
+
+    document.getElementById('match-title').textContent = home + ' vs ' + away;
+    ['xgb-home-label','poi-home-label'].forEach(id => document.getElementById(id).textContent = home);
+    ['xgb-away-label','poi-away-label'].forEach(id => document.getElementById(id).textContent = away);
+
+    const xgb = d.xgboost; const poi = d.poisson;
+    document.getElementById('xgb-home-pct').textContent = xgb.home_win_pct + '%';
+    document.getElementById('xgb-draw-pct').textContent = xgb.draw_pct + '%';
+    document.getElementById('xgb-away-pct').textContent = xgb.away_win_pct + '%';
+    setBar('xgb-home-bar', xgb.home_win_pct);
+    setBar('xgb-draw-bar', xgb.draw_pct);
+    setBar('xgb-away-bar', xgb.away_win_pct);
+
+    document.getElementById('poi-home-pct').textContent = poi.home_win_pct + '%';
+    document.getElementById('poi-draw-pct').textContent = poi.draw_pct + '%';
+    document.getElementById('poi-away-pct').textContent = poi.away_win_pct + '%';
+    setBar('poi-home-bar', poi.home_win_pct);
+    setBar('poi-draw-bar', poi.draw_pct);
+    setBar('poi-away-bar', poi.away_win_pct);
+
+    document.getElementById('stat-home-label').textContent = home + ' Elo';
+    document.getElementById('stat-away-label').textContent = away + ' Elo';
+    document.getElementById('stat-home-elo').textContent = d.home_stats.elo;
+    document.getElementById('stat-away-elo').textContent = d.away_stats.elo;
+    document.getElementById('stat-xg').textContent = poi.home_xg + ' : ' + poi.away_xg;
+
+    const scores = poi.top_scorelines;
+    const maxPct = Math.max.apply(null, Object.values(scores));
+    const list = document.getElementById('scorelines-list');
+    list.innerHTML = '';
+    Object.entries(scores).sort((a,b) => b[1]-a[1]).forEach(([score, pct]) => {
+      list.innerHTML += '<div class="score-row">' +
+        '<div class="score-label">' + score + '</div>' +
+        '<div class="score-bar-bg"><div class="score-bar-fill" style="width:' + (pct/maxPct*100).toFixed(1) + '%"></div></div>' +
+        '<div class="score-pct">' + pct + '%</div>' +
+      '</div>';
+    });
+
+    document.getElementById('home-history-label').textContent = home + ' - last 10';
+    document.getElementById('away-history-label').textContent = away + ' - last 10';
+    renderHistory(d.last10_home || [], 'home-form-strip', 'home-history-table');
+    renderHistory(d.last10_away || [], 'away-form-strip', 'away-history-table');
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+
+    document.getElementById('polymarket-content').innerHTML = '<div class="poly-empty">Checking Polymarket...</div>';
+    document.getElementById('bet-suggestions').innerHTML = '';
+    try {
+      const pr = await fetch(API + '/polymarket/' + encodeURIComponent(home) + '/' + encodeURIComponent(away));
+      const poly = await pr.json();
+      renderPolymarket(poly);
+      renderBetSuggestions(xgb, poi, poly, home, away);
+    } catch(e) {
+      renderPolymarket({found:false, message:'Could not reach Polymarket lookup.'});
+      renderBetSuggestions(xgb, poi, {found:false}, home, away);
+    }
+
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    errEl.textContent = 'Error: ' + e.message;
+    errEl.style.display = 'block';
+  }
+});
+
+loadTeams();
+
+document.getElementById('add-match-toggle').addEventListener('click', () => {
+  const card = document.getElementById('add-match-card');
+  const isOpen = card.style.display === 'block';
+  card.style.display = isOpen ? 'none' : 'block';
+  document.getElementById('add-match-toggle').textContent = isOpen ? '+ Add a finished match result' : '- Hide add match form';
+  if (!isOpen && !document.getElementById('am-date').value) {
+    document.getElementById('am-date').value = new Date().toISOString().slice(0,10);
+  }
+});
+
+document.getElementById('add-match-submit').addEventListener('click', async () => {
+  const statusEl = document.getElementById('add-match-status');
+  const submitBtn = document.getElementById('add-match-submit');
+
+  const payload = {
+    date: document.getElementById('am-date').value,
+    home_team: document.getElementById('am-home').value.trim(),
+    away_team: document.getElementById('am-away').value.trim(),
+    home_score: parseInt(document.getElementById('am-home-score').value, 10),
+    away_score: parseInt(document.getElementById('am-away-score').value, 10),
+    tournament: document.getElementById('am-tournament').value.trim() || 'FIFA World Cup',
+    city: document.getElementById('am-city').value.trim(),
+    country: document.getElementById('am-country').value.trim(),
+    neutral: document.getElementById('am-neutral').checked,
+  };
+
+  if (!payload.date || !payload.home_team || !payload.away_team) {
+    statusEl.className = 'add-match-status fail';
+    statusEl.textContent = 'Please fill in date, home team, and away team.';
+    statusEl.style.display = 'block';
+    return;
+  }
+
+  submitBtn.disabled = true;
+  statusEl.className = 'add-match-status working';
+  statusEl.textContent = 'Adding match, rebuilding dataset, and retraining model. This takes about 30-45 seconds...';
+  statusEl.style.display = 'block';
+
+  try {
+    const r = await fetch(API + '/add_match', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Failed to add match');
+
+    statusEl.className = 'add-match-status success';
+    statusEl.textContent = d.message + ' You can now run a prediction with updated data.';
+    await loadTeams();
+  } catch(e) {
+    statusEl.className = 'add-match-status fail';
+    statusEl.textContent = 'Error: ' + e.message;
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+</script>
+</body>
+</html>
